@@ -9,7 +9,7 @@ radio_addrx = 'd02375ad6329953d6282595640b516f27147226b6a3874d56d0289fdca436c17'
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "mainnet"
+rev = "devnet"
 subdir = "aptos-move/framework/aptos-framework"
 
 [dev-dependencies]
