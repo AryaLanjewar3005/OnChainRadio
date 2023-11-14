@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = []
 
 [addresses]
-radio_addrx = '0xd02375ad6329953d6282595640b516f27147226b6a3874d56d0289fdca436c17'
+radio_addrx = '6C421AA1F9BB7C1F67E1E668169FE1660262DFB039A95EF177093D1EDF0AD726'
 [dev-addresses]
 
 [dependencies.AptosFramework]
