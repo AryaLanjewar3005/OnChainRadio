@@ -12,7 +12,17 @@ module radio_addrx::OnChainRadio {
     use std::vector;
     use std::ed25519;
     // use std::Aptos::any;
+    use 0x1::coin;
+    use 0x1::aptos_coin::AptosCoin; 
+    use 0x1::aptos_account;
+
+    // define errors
     const Account_Not_Found:u64 =404;
+    const Collection_Not_Found:u64=808;
+    const E_NOT_ENOUGH_COINS:u64 = 202;
+
+        // define contract address
+        const CONTRACT:address=@0xd02375ad6329953d6282595640b516f27147226b6a3874d56d0289fdca436c17;
 
     struct Artist_work has key ,store,drop{
         artist_name: String,
@@ -90,7 +100,7 @@ module radio_addrx::OnChainRadio {
         simple_map::add(&mut artist_work.Collections,songHashId , newCollection);
 
         // update global counter
-
+        // UpdateGlobalCounter(&mut GlobalInfo);
         // counter=counter+1;
 
         //update nonce for artist account
@@ -99,6 +109,16 @@ module radio_addrx::OnChainRadio {
 
     }
 
+    // update global counter
+    fun UpdateGlobalCounter(globalinfo:&mut GlobalInfo){
+        globalinfo.TotalContent=globalinfo.TotalContent+1;
+    }
+
+    // update global collection info
+    fun UpdateGlobalCollectionInfo(globalinfo:&mut GlobalInfo,songhashid:String,collectioninfo:CollectionInfo){
+        simple_map::add(&mut globalinfo.SongMap_Total_To_CollectionInfo, songhashid,collectioninfo);
+
+    }
     // get artist work by account
 
     // public fun GetArtistWork(account:&signer):&Artist_work acquires Artist_work{
@@ -126,7 +146,8 @@ module radio_addrx::OnChainRadio {
     // public fun getCollectionInfo(account:&signer,songHashId:String):Collection acquires Artist_work{
     //     let signer_address = signer::address_of(account);
     //     let artist_work = borrow_global<Artist_work>(signer_address);
-    //     simple_map::borrow(&mut artist_work.Collections,&songHashId)
+    //     // simple_map::borrow(&mut artist_work.Collections,&songHashId)
+    //     artist_work.Collection
 
     // }
 
@@ -175,12 +196,18 @@ module radio_addrx::OnChainRadio {
     public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_collection,signatuedetails:SignatureDetails) acquires Artist_work{
         //check account with given hashId
         let signer_address = signer::address_of(account);
+        // check account exist or not
         if (!exists<Artist_work>(signer_address)){
             error::not_found(Account_Not_Found);
         };
-        let artist_work = borrow_global_mut<Artist_work>(signer_address);
 
-        // push/update monitize info in resources
+        let artist_work = borrow_global_mut<Artist_work>(signer_address);
+        // check wheather collections exist or not for given songHashId
+        if (!simple_map::contains_key(&mut artist_work.Collections,&songHashId)){
+            error::not_found(Collection_Not_Found);
+        };
+
+        // push/update monitize info in artist resources
         simple_map::add(&mut artist_work.Monitize_collections,songHashId , monitize);
 
         // verify signature of collection
@@ -194,17 +221,63 @@ module radio_addrx::OnChainRadio {
 
     }
 
-    // // tip send by client to artise
-    // public fun Donate(account:&signer,amount:u64,songhash:String){
-    //     // must have coin more than amount in account
+    // tip send by client to artist account
+    public fun Donate(account:&signer,amount:u64,songhash:String){
+        // must have coin more than amount in account
+        let from_acc_balance:u64 = coin::balance<AptosCoin>(signer::address_of(account));
+        if(from_acc_balance<=amount){
+            error::not_found(E_NOT_ENOUGH_COINS);
+        }
+        // let artist_address=borrow_global<>
+        // //transfer coin from client to artist
+        // aptos_account::transfer(from,artist_address,amount); 
 
-    //     //transfer coin from client to artist
+    }
 
-    // }
+    struct ContentInfo has copy,drop,store{
+        Artist_address:address,
+        Artist_signature:vector<u8>,
+        CopyNumber:u64,
+        Content_IPFS_address:String,
+        Ceritificate_By_artist_IPFS_Address:String,
+        Ceritificate_By_client_IPFS_Address:String,
+        Timestamp:u64,
+        Client_address:address,
+        Client_signature:vector<u8>,
+        Price:u64,
+        Platform_name:String,
+    }
 
-    // // purchase copy of song after streaming
+    struct Client_resource has key,store{
+        Collections:SimpleMap<String,ContentInfo>,
+    }
+    
+     // call only one time
+    // creates the client resource 
+    fun create_client_resource(account : &signer)  {
+        let client_resource = Client_resource {
+            Collections:simple_map::create(),
 
-    // // public fun Purchase()
+        };
+
+        move_to(account, client_resource);
+    }
+
+
+    // purchase copy of song after streaming
+
+    public fun Purchase(account:&signer,songhashid:String){
+        //1. check no of copies avilable or not
+        // 2. verify signature of artist
+        // 3. an account must purchase only one copy
+        //4. create resource for user if not avilable
+        //5. push signature and hash of user and songhashid to user resources
+        // 4. create nft including all info about content and move to user account
+        // 6.  
+        //4. transfer aptos coint to artist account
+
+    }
+
 
 
     //////////////////test case///////////////
@@ -232,3 +305,4 @@ module radio_addrx::OnChainRadio {
 
     }
 }
+
