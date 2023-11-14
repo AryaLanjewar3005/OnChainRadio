@@ -15,6 +15,7 @@ module radio_addrx::OnChainRadio {
     use 0x1::coin;
     use 0x1::aptos_coin::AptosCoin; 
     use 0x1::aptos_account;
+    use aptos_framework::event;
 
     // define errors
     const Account_Not_Found:u64 =404;
@@ -24,13 +25,14 @@ module radio_addrx::OnChainRadio {
         // define contract address
         const CONTRACT:address=@0xd02375ad6329953d6282595640b516f27147226b6a3874d56d0289fdca436c17;
 
-    struct Artist_work has key ,store,drop{
+    struct Artist_work has key ,store{
         artist_name: String,
         Nonce:u64,
         Collections:SimpleMap<String,Collection>,
         Monitize_collections:SimpleMap<String,Monitize_collection>,
         Signature_Details:SimpleMap<String,SignatureDetails>,
         HashIds: vector<String>,
+        artist_resource_event: event::EventHandle<Collection>,
 
     }
     struct Collection has copy, drop,key,store {
@@ -49,9 +51,10 @@ module radio_addrx::OnChainRadio {
         
     }
 
+
     // call only one time
     // creates the artist_work resource 
-    fun create_artist_work(account : &signer, name : String)  {
+    public entry fun create_artist_work(account : &signer, name : String)  {
         let artist_work = Artist_work {
             artist_name : name,
             Nonce:1,
@@ -59,6 +62,7 @@ module radio_addrx::OnChainRadio {
             Monitize_collections:simple_map::create(),
             Signature_Details:simple_map::create(),
             HashIds:vector::empty<String>(),
+            artist_resource_event:account::new_event_handle<Collection>(account),
             
 
         };
@@ -105,6 +109,12 @@ module radio_addrx::OnChainRadio {
 
         //update nonce for artist account
         artist_work.Nonce=artist_work.Nonce+1;
+
+        // event
+        event::emit_event<Collection>(
+            &mut borrow_global_mut<Artist_work>(signer_address).artist_resource_event,
+            newCollection,
+        );
         return songHashId
 
     }
@@ -119,13 +129,11 @@ module radio_addrx::OnChainRadio {
         simple_map::add(&mut globalinfo.SongMap_Total_To_CollectionInfo, songhashid,collectioninfo);
 
     }
-    // get artist work by account
+    // // get artist work by account
 
-    // public fun GetArtistWork(account:&signer):&Artist_work acquires Artist_work{
+    // public fun GetArtistWork(account:&signer):Artist_work acquires Artist_work{
     //     let signer_address = signer::address_of(account);
-    //     let artist_work_ref = borrow_global<Artist_work>(signer_address);
-    //     let artist_work = copy artist_work_ref;
-    //     artist_work
+    //     borrow_global<Artist_work>(signer_address).
     // }
 
     // get all songhashIds vector by account
@@ -142,30 +150,29 @@ module radio_addrx::OnChainRadio {
         return artist_work.Nonce
     }
     
-    // // get collection info by songHashId
-    // public fun getCollectionInfo(account:&signer,songHashId:String):Collection acquires Artist_work{
-    //     let signer_address = signer::address_of(account);
-    //     let artist_work = borrow_global<Artist_work>(signer_address);
-    //     // simple_map::borrow(&mut artist_work.Collections,&songHashId)
-    //     artist_work.Collection
+    // get collection info by songHashId
+    public fun getCollectionInfo(account:&signer,songHashId:String):SimpleMap<String,Collection> acquires Artist_work{
+        let signer_address = signer::address_of(account);
+        let artist_work = borrow_global<Artist_work>(signer_address);
+        artist_work.Collections
 
-    // }
+    }
 
-    // // get monitize info by songHashId
-    // public fun getMonitizeInfo(account:&signer,songHashId:String):Monitize_collection acquires Artist_work{
-    //     let signer_address = signer::address_of(account);
-    //     let artist_work = borrow_global<Artist_work>(signer_address);
-    //     simple_map::borrow(&mut artist_work.Monitize_collections,&songHashId)
+    // get monitize info by songHashId
+    public fun getMonitizeInfo(account:&signer,songHashId:String):SimpleMap<String,Monitize_collection>  acquires Artist_work{
+        let signer_address = signer::address_of(account);
+        let artist_work = borrow_global<Artist_work>(signer_address);
+        artist_work.Monitize_collections
 
-    // }
+    }
 
-    //  // get Signature  info by songHashId
-    // public fun getSignatureInfo(account:&signer,songHashId:String):SignatureDetails acquires Artist_work{
-    //     let signer_address = signer::address_of(account);
-    //     let artist_work = borrow_global<Artist_work>(signer_address);
-    //     simple_map::borrow(&mut artist_work.Signature_Details,&songHashId)
+     // get Signature  info by songHashId
+    public fun getSignatureInfo(account:&signer,songHashId:String):SimpleMap<String,SignatureDetails>  acquires Artist_work{
+        let signer_address = signer::address_of(account);
+        let artist_work = borrow_global<Artist_work>(signer_address);
+        artist_work.Signature_Details
 
-    // }
+    }
 
 
     struct Monitize_collection has key,copy,drop,store{
@@ -179,14 +186,14 @@ module radio_addrx::OnChainRadio {
         CopyExpiryTimestamp:u64,
     }
 
-    struct SignatureDetails has key,store,drop{
+    struct SignatureDetails has key,store,drop,copy{
         Ceritificate_Hash:vector<u8>,
         Certifiate_Signature:vector<u8>,
     }
 
     // for store on blockchain
     struct CollectionInfo has key,store,drop{
-        ArtistWork:Artist_work,
+        // ArtistWork:Artist_work,
         Collections:Collection,
         Monitize:Monitize_collection,
         signature:SignatureDetails,
@@ -250,13 +257,15 @@ module radio_addrx::OnChainRadio {
 
     struct Client_resource has key,store{
         Collections:SimpleMap<String,ContentInfo>,
+        client_resource_event:event::EventHandle<ContentInfo>,
     }
     
      // call only one time
     // creates the client resource 
-    fun create_client_resource(account : &signer)  {
+    public entry fun create_client_resource(account : &signer)  {
         let client_resource = Client_resource {
             Collections:simple_map::create(),
+            client_resource_event:account::new_event_handle<ContentInfo>(account),
 
         };
 
