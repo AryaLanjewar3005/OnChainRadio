@@ -262,7 +262,7 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
         assert!(nonce == 1, 0);
         print(&nonce);
         print(&name);
-        // create_collection(&artist,collection_type,collection_name,streaming_timestamp,ipfs_hash);
+        create_collection(&artist,collection_type,collection_name,streaming_timestamp,ipfs_hash);
         // let collection:SimpleMap<String,Collection> =GetCollectionInfo(&artist,ipfs_hash);
         // let nonce=GetNonce(&artist);
         // assert!(GetNonce(&artist)==6,1);
@@ -271,6 +271,7 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
         // print(artist.authentication_key)
 
     }
+       // Test case for GetNonce function
 
 }
 
