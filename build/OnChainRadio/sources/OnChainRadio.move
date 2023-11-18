@@ -97,6 +97,31 @@ module radio_addrx::OnChainRadio {
         );
 
     }
+
+    // struct Data has store,copy{
+    //     ArtistWork:Artist_work,
+   
+
+
+    // }
+
+    // struct GlobalData has key{
+    //     Nonce:u64,
+    //     Song:SimpleMap<String,Data>
+    // }
+
+    // public entry fun CreateGlobaldatabase(account:&signer){
+    //     if(exists<GlobalData>(@radio_addrx)){
+    //         // global data base already created
+    //     };
+    //     // let data=Data{
+
+    //     // }
+    //     move_to(account, artist_work);
+        
+        
+    // }
+
     // get all songhashIds vector by account
     public fun GetHashIds(account:&signer):vector<String> acquires Artist_work {
         let signer_address = signer::address_of(account);
@@ -153,7 +178,7 @@ module radio_addrx::OnChainRadio {
     }
 
 
-public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_collection,signatuedetails:SignatureDetails) acquires Artist_work{        // check account with given hashId
+public  fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_collection,signatuedetails:SignatureDetails) acquires Artist_work{        // check account with given hashId
         let signer_address = signer::address_of(account);
         // check account exist or not
         if (!exists<Artist_work>(signer_address)){
@@ -228,15 +253,15 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
     // purchase copy of song after streaming
 
     // public entry fun Purchase(account:&signer,songhashid:String,artist_address:address){
-    //     //1. check no of copies avilable or not
+        // 1. check no of copies avilable or not
 
-    //     // 2. verify signature of artist
-    //     // 3. an account must purchase only one copy
-    //     //4. create resource for user if not avilable
-    //     //5. push signature and hash of user and songhashid to user resources
-    //     // 4. create nft including all info about content and move to user account
-    //     // 6.  
-    //     //4. transfer aptos coint to artist account
+        // 2. verify signature of artist
+        // 3. an account must purchase only one copy
+        // 4. create resource for user if not avilable
+        // 5. push signature and hash of user and songhashid to user resources
+        // 4. create nft including all info about content and move to user account
+        // 6.  
+        // 4. transfer aptos coint to artist account
 
     // }
 
@@ -253,16 +278,16 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
 
         // create_artist_work(&artist,utf8(b"Welcome to Aptos anand by Example"));
         let name:String = utf8(b"arjit singh");
-        let collection_type:String = utf8(b"arjit singh");
-        let collection_name:String = utf8(b"arjit singh");
-        let ipfs_hash:String = utf8(b"arjit singh");
-        let streaming_timestamp: u64=timestamp::now_seconds();
+        // let _collection_type:String = utf8(b"arjit singh");
+        // let _collection_name:String = utf8(b"arjit singh");
+        // let ipfs_hash:String = utf8(b"arjit singh");
+        // let streaming_timestamp: u64=timestamp::now_seconds();
         create_artist_work(&artist,name);
         let nonce = GetNonce(&artist);
         assert!(nonce == 1, 0);
         print(&nonce);
         print(&name);
-        create_collection(&artist,collection_type,collection_name,streaming_timestamp,ipfs_hash);
+        // create_collection(&artist,collection_type,collection_name,streaming_timestamp,ipfs_hash);
         // let collection:SimpleMap<String,Collection> =GetCollectionInfo(&artist,ipfs_hash);
         // let nonce=GetNonce(&artist);
         // assert!(GetNonce(&artist)==6,1);
@@ -271,7 +296,6 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
         // print(artist.authentication_key)
 
     }
-       // Test case for GetNonce function
 
 }
 
