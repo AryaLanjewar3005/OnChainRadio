@@ -260,29 +260,24 @@ module radio_addrx::OnChainRadio {
 
     // purchase copy of song after streaming
 
-    // public entry fun Purchase(account:&signer,songhashid:String,artist_address:address){
-    //     //1. check no of copies avilable or not
-    //     let client_address = signer::address_of(account);
+    public entry fun Purchase(account:&signer,songhashid:String,artist_address:address) acquires Artist_work, Client_resource{
+        //1. check no of copies avilable or not
+        let client_address = signer::address_of(account);
         
-    //     let client_resource = borrow_global_mut<Client_resource>(client_address);
-    //     let artist_work = borrow_global<Artist_work>(artist_address);
-    //     let content_copy = ContentInfo {
-    //         Artist_address : artist_address,
-    //         Artist_signature : ,
+        let client_resource = borrow_global_mut<Client_resource>(client_address);
+        let artist_work = borrow_global_mut<Artist_work>(artist_address);
+        let monitizationDetails = simple_map::borrow(&mut artist_work.Monitize_collections,&songhashid);
+        let price = monitizationDetails.PriceOfCopy;
+        aptos_account::transfer(account,artist_address,price); 
+        // 2. verify signature of artist
+        // 3. an account must purchase only one copy
+        //4. create resource for user if not avilable
+        //5. push signature and hash of user and songhashid to user resources
+        // 4. create nft including all info about content and move to user account
+        // 6.  
+        //4. transfer aptos coint to artist account
 
-    //     }
-    //     simple_map::add(&mut client_resource.Collections, songhashid, content_copy);
-
-    //     // 2. verify signature of artist
-    //     // 3. an account must purchase only one copy
-    //     //4. create resource for user if not avilable
-    //     //5. push signature and hash of user and songhashid to user resources
-    //     // 4. create nft including all info about content and move to user account
-    //     // 6.  
-    //     //4. transfer aptos coint to artist account
-
-    // }
-
+    }
 
 
     //////////////////test case///////////////
