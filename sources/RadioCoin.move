@@ -5,7 +5,10 @@
     use aptos_framework::account;
     use aptos_std::type_info;
     use std::string::{utf8, String};
-    use std::signer;
+    use std::signer;    
+    use std::debug;
+    use std::option::Option;
+    use aptos_framework::aptos_account;
 
 
     struct RadioCoin{}
@@ -45,6 +48,7 @@
         let mint_coin = coin::mint<RadioCoin>(amount, mint_cap);
         coin::deposit<RadioCoin>(to_address, mint_coin);
         emit_event(to_address, utf8(b"minted Radio coin"));
+
     }
 
     //any user can invoke the burn_coin function
@@ -78,18 +82,41 @@
         emit_event(unfreeze_address, utf8(b"unfreezed"));
     }
 
-    /*
-    opration on Radiocoin
-    1. coin::transfer<RadioCoin>(from:&signer,to:address,amount:u64)
+
+    public entry fun transfer(from:&signer,to:address,amount:u64){
+        coin::transfer<RadioCoin>(from,to,amount)
+    }
+
+    public entry fun buy(account:&signer,to:address,amount:u64)acquires CapStore,RadioEventStore{
+        aptos_account::transfer(account,@radio_addrx,amount); 
+        let mint_cap = &borrow_global<CapStore>(@radio_addrx).mint_cap;
+        let totalRadioCoin:u64 =1000000*amount;
+        let mint_coin = coin::mint<RadioCoin>(totalRadioCoin, mint_cap);
+        coin::deposit<RadioCoin>(to, mint_coin);
+        emit_event(to, utf8(b"transfered RadioCoin successfully"));
+
+    }
     #[view]
-    2. coin::balance<RadioCoin>(owner:address):u64
-    3. coin::is_coin_initialized<RadioCoin>(): bool
-    4. coin::is_coin_store_frozen<RadioCoin>(account_addr: address): bool
-    5. coin::is_account_registered<RadioCoin>(account_addr: address): bool
-    6. coin::supply<RadioCoin>(): Option<u128> 
+    public fun Balance(account :address):u64{
+        coin::balance<RadioCoin>(account)
+    }
 
-    */ 
+    #[view]
+    public fun Supply():Option<u128>{
+        coin::supply<RadioCoin>()
+    }
+    #[view]
+    public fun is_coin_store_froze(account:address):bool{
+        coin::is_coin_store_frozen<RadioCoin>(account)
+    }
+    #[view]
+    public fun is_account_registered(account:address):bool{
+        coin::is_account_registered<RadioCoin>(account)
+    }
 
-
+    #[view]
+    public fun is_coin_initialized():bool{
+        coin::is_coin_initialized<RadioCoin>()
+    }
     
 }

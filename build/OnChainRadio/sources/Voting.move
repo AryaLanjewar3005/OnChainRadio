@@ -258,29 +258,6 @@ module radio_addrx::Voting {
         );
     }
 
-    public entry fun Withdraw<vote<ProposalType: store>>(
-        account:&signer,
-        voting_forum_address: address,
-        proposal_id: u64,
-        should_pass: bool,
-        num_votes: u64)acquires VotingForum{
-        let voting_forum = borrow_global_mut<VotingForum<ProposalType>>(voting_forum_address);
-        let proposal = table::borrow_mut(&mut voting_forum.proposals, proposal_id);
-        assert!(!is_voting_period_over(proposal), error::invalid_state(EPROPOSAL_VOTING_ALREADY_ENDED));
-        assert!(!proposal.is_resolved, error::invalid_state(EPROPOSAL_ALREADY_RESOLVED));
-
-        if (should_pass) {
-            proposal.yes_votes = proposal.yes_votes - (num_votes as u128);
-        } else {
-            proposal.no_votes = proposal.no_votes - (num_votes as u128);
-        };
-
-        // return voter's coin
-        OnChainRadioCoin::transfer(@radio_addrx,account,num_votes*1000000);
-
-        // update global data
-
-        }
 
     /// Resolve a single-step proposal with the given id.
     /// Can only be done if there are at least as many votes as min required and

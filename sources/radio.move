@@ -13,7 +13,7 @@ module radio_addrx::OnChainRadio {
     use 0x1::aptos_account;
     use aptos_framework::event;
     use std::debug::print;
-    // use aptos_framework::aptos_token;
+    // use aptos_token::token;
 
     // define errors
     const Account_Not_Found:u64 =404;
@@ -122,6 +122,7 @@ module radio_addrx::OnChainRadio {
         
     // }
 
+     #[view]
     // get all songhashIds vector by account
     public fun GetHashIds(account:&signer):vector<String> acquires Artist_work {
         let signer_address = signer::address_of(account);
@@ -129,6 +130,7 @@ module radio_addrx::OnChainRadio {
         return artist_work.HashIds
     }
 
+     #[view]
     // get nonce of account
     public fun GetNonce(account:&signer) :u64 acquires Artist_work{
         let signer_address = signer::address_of(account);
@@ -136,6 +138,7 @@ module radio_addrx::OnChainRadio {
         return artist_work.Nonce
     }
     
+     #[view]
     // get collection info by songHashId
     public fun getCollectionInfo(account:&signer,_songHashId:String):SimpleMap<String,Collection> acquires Artist_work{
         let signer_address = signer::address_of(account);
@@ -144,6 +147,7 @@ module radio_addrx::OnChainRadio {
 
     }
 
+     #[view]
     // get monitize info by songHashId
     public fun getMonitizeInfo(account:&signer,_songHashId:String):SimpleMap<String,Monitize_collection>  acquires Artist_work{
         let signer_address = signer::address_of(account);
@@ -152,6 +156,7 @@ module radio_addrx::OnChainRadio {
 
     }
 
+     #[view]
      // get Signature  info by songHashId
     public fun getSignatureInfo(account:&signer,_songHashId:String):SimpleMap<String,SignatureDetails>  acquires Artist_work{
         let signer_address = signer::address_of(account);
@@ -253,16 +258,57 @@ public  fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_c
     // purchase copy of song after streaming
 
     // public entry fun Purchase(account:&signer,songhashid:String,artist_address:address){
-        // 1. check no of copies avilable or not
 
-        // 2. verify signature of artist
-        // 3. an account must purchase only one copy
-        // 4. create resource for user if not avilable
-        // 5. push signature and hash of user and songhashid to user resources
-        // 4. create nft including all info about content and move to user account
-        // 6.  
-        // 4. transfer aptos coint to artist account
+    //    let artist_work = borrow_global<Artist_work>(artist_address);
+    //     // check wheather collections exist or not for given songHashId
+    //     let price=borrow(&mut artist_work.Monitize_collections,&songhashid).PriceOfCopy;
+    //     // aptos_account::transfer(account,artist_address,price); 
 
+    //     // create and transfer nft
+        
+
+    // }
+
+    //    fun Create_Nft(source_account: &signer,collection_name:String,description:String,collection_uri:String,token_name:String,token_uri:String) {
+    //     // This means that the supply of the token will not be tracked.
+    //     let maximum_supply = 0;
+    //     // This variable sets if we want to allow mutation for collection description, uri, and maximum.
+    //     // Here, we are setting all of them to false, which means that we don't allow mutations to any CollectionData fields.
+    //     let mutate_setting = vector<bool>[ false, false, false ];
+
+    //     // Create the nft collection.
+    //     token::create_collection(source_account, collection_name, description, collection_uri, maximum_supply, mutate_setting);
+
+    //     // Create a token data id to specify the token to be minted.
+    //     let token_data_id = token::create_tokendata(
+    //         source_account,
+    //         collection_name,
+    //         token_name,
+    //         string::utf8(b""),
+    //         0,
+    //         token_uri,
+    //         signer::address_of(source_account),
+    //         1,
+    //         0,
+    //         // This variable sets if we want to allow mutation for token maximum, uri, royalty, description, and properties.
+    //         // Here we enable mutation for properties by setting the last boolean in the vector to true.
+    //         token::create_token_mutability_config(
+    //             &vector<bool>[ false, false, false, false, true ]
+    //         ),
+    //         // We can use property maps to record attributes related to the token.
+    //         // In this example, we are using it to record the receiver's address.
+    //         // We will mutate this field to record the user's address
+    //         // when a user successfully mints a token in the `mint_nft()` function.
+    //         vector<String>[string::utf8(b"given_to")],
+    //         vector<vector<u8>>[b""],
+    //         vector<String>[ string::utf8(b"address") ],
+    //     );
+
+    //     // Store the token data id within the module, so we can refer to it later
+    //     // when we're minting the NFT and updating its property version.
+    //     move_to(source_account, ModuleData {
+    //         token_data_id,
+    //     });
     // }
 
 

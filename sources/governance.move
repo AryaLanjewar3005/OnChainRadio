@@ -10,7 +10,7 @@ use std::account;
 use std::vector;
 use std::debug::print;
 use aptos_framework::stake;
-use radio_addrx::voting;
+// friend radio_addrx::Voting;
     /// Configurations of the AptosGovernance, set during Genesis and can be updated by the same process offered
     /// by this AptosGovernance module.
     struct GovernanceConfig has key {
