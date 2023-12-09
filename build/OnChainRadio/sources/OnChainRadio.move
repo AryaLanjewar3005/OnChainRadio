@@ -13,7 +13,7 @@ module radio_addrx::OnChainRadio {
     use 0x1::aptos_account;
     use aptos_framework::event;
     use std::debug::print;
-    // use aptos_token::token;
+    // use aptos_framework::token;
 
     // define errors
     const Account_Not_Found:u64 =404;
@@ -28,7 +28,6 @@ module radio_addrx::OnChainRadio {
         Collections:SimpleMap<String,Collection>,
         Monitize_collections:SimpleMap<String,Monitize_collection>,
         Signature_Details:SimpleMap<String,SignatureDetails>,
-        HashIds: vector<String>,
         artist_resource_event: event::EventHandle<Collection>,
 
     }
@@ -52,24 +51,20 @@ module radio_addrx::OnChainRadio {
             Collections : simple_map::create(),
             Monitize_collections:simple_map::create(),
             Signature_Details:simple_map::create(),
-            HashIds:vector::empty<String>(),
             artist_resource_event:account::new_event_handle<Collection>(account),
-            
-
         };
         // debug::print(&artist_work);
         move_to(account, artist_work);
     }
     // creates collection and stores it in artist_work resource
 
-    public entry fun create_collection (account : &signer,collection_type: String,collection_name : String, streaming_timestamp: u64, ipfs_hash: String)acquires Artist_work {
+    public entry fun create_collection (account : &signer,artist_name:String,collection_type: String,collection_name : String, streaming_timestamp: u64, ipfs_hash: String)acquires Artist_work {
         let signer_address = signer::address_of(account);
-        let artist_work = borrow_global_mut<Artist_work>(signer_address);
         if (!exists<Artist_work>(signer_address)){
-            error::not_found(Account_Not_Found);
+            create_artist_work(account,artist_name);
         };
+        let artist_work = borrow_global_mut<Artist_work>(signer_address);
         let signer_authentication_key=account::get_authentication_key(signer_address);
-
         let newCollection = Collection {
             collectionType : collection_type,
             collectionName : collection_name,
@@ -80,11 +75,7 @@ module radio_addrx::OnChainRadio {
             collection_ipfs_hash : ipfs_hash,
 
         };
-
         let songHashId=ipfs_hash;
-
-
-        vector::push_back(&mut artist_work.HashIds , songHashId);
         simple_map::add(&mut artist_work.Collections,songHashId , newCollection);
 
         //update nonce for artist account
@@ -97,39 +88,6 @@ module radio_addrx::OnChainRadio {
         );
 
     }
-
-    // struct Data has store,copy{
-    //     ArtistWork:Artist_work,
-   
-
-
-    // }
-
-    // struct GlobalData has key{
-    //     Nonce:u64,
-    //     Song:SimpleMap<String,Data>
-    // }
-
-    // public entry fun CreateGlobaldatabase(account:&signer){
-    //     if(exists<GlobalData>(@radio_addrx)){
-    //         // global data base already created
-    //     };
-    //     // let data=Data{
-
-    //     // }
-    //     move_to(account, artist_work);
-        
-        
-    // }
-
-     #[view]
-    // get all songhashIds vector by account
-    public fun GetHashIds(account:&signer):vector<String> acquires Artist_work {
-        let signer_address = signer::address_of(account);
-        let artist_work = borrow_global<Artist_work>(signer_address);
-        return artist_work.HashIds
-    }
-
      #[view]
     // get nonce of account
     public fun GetNonce(account:&signer) :u64 acquires Artist_work{
@@ -182,8 +140,25 @@ module radio_addrx::OnChainRadio {
         Certifiate_Signature:vector<u8>,
     }
 
+    public entry fun Broadcast(account:&signer,songHashId:String,maxcopies:u64,currentCopies:u64,price:u64,royalities:u64,certificateAddr:String,ceritifiateHash:vector<u8>,signature:vector<u8>)acquires Artist_work{
+        let monitizeDetails=Monitize_collection{
+        IsEKycVerified:true,
+        NoOfMaxCopies:maxcopies,
+        NoOfCopyReleased:currentCopies,
+        PriceOfCopy:price,
+        CertificateActivated:true,
+        Royality:royalities,   // royality in %
+        Ceritificate_IPFS_Address:certificateAddr,
+        CopyExpiryTimestamp:18446744073709551615,
+        };
+        let signatureDetails=SignatureDetails{
+        Ceritificate_Hash:ceritifiateHash,
+        Certifiate_Signature:signature,
+        };
+        Monitize_work(account,songHashId,monitizeDetails,signatureDetails);
+    }
 
-public  fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_collection,signatuedetails:SignatureDetails) acquires Artist_work{        // check account with given hashId
+public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_collection,signatuedetails:SignatureDetails) acquires Artist_work{        // check account with given hashId
         let signer_address = signer::address_of(account);
         // check account exist or not
         if (!exists<Artist_work>(signer_address)){
@@ -204,25 +179,6 @@ public  fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_c
 
     }
 
-    // tip send by client to artist account
-    public entry fun Donate(account:&signer,amount:u64,_songhash:String,artist_address:address){
-        // must have coin more than amount in account
-        let from_acc_balance:u64 = coin::balance<AptosCoin>(signer::address_of(account));
-                // check account exist or not
-        if (!exists<Artist_work>(artist_address)){
-            error::not_found(Artist_Not_Found);
-        };
-
-
-        if(from_acc_balance<=amount){
-            error::not_found(E_NOT_ENOUGH_COINS);
-        };
-
-        // //transfer coin from client to artist
-        aptos_account::transfer(account,artist_address,amount); 
-
-    }
-
     struct ContentInfo has copy,drop,store{
         Artist_address:address,
         Artist_signature:vector<u8>,
@@ -238,17 +194,14 @@ public  fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_c
     }
 
     struct Client_resource has key,store{
-        Collections:SimpleMap<String,ContentInfo>,
-        client_resource_event:event::EventHandle<ContentInfo>,
-    }
+        Collections:SimpleMap<String,ContentInfo>
+        }
     
      // call only one time
     // creates the client resource 
     public entry fun create_client_resource(account : &signer)  {
         let client_resource = Client_resource {
             Collections:simple_map::create(),
-            client_resource_event:account::new_event_handle<ContentInfo>(account),
-
         };
 
         move_to(account, client_resource);
@@ -257,60 +210,30 @@ public  fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_c
 
     // purchase copy of song after streaming
 
-    // public entry fun Purchase(account:&signer,songhashid:String,artist_address:address){
-
-    //    let artist_work = borrow_global<Artist_work>(artist_address);
-    //     // check wheather collections exist or not for given songHashId
-    //     let price=borrow(&mut artist_work.Monitize_collections,&songhashid).PriceOfCopy;
-    //     // aptos_account::transfer(account,artist_address,price); 
-
-    //     // create and transfer nft
-        
-
-    // }
-
-    //    fun Create_Nft(source_account: &signer,collection_name:String,description:String,collection_uri:String,token_name:String,token_uri:String) {
-    //     // This means that the supply of the token will not be tracked.
-    //     let maximum_supply = 0;
-    //     // This variable sets if we want to allow mutation for collection description, uri, and maximum.
-    //     // Here, we are setting all of them to false, which means that we don't allow mutations to any CollectionData fields.
-    //     let mutate_setting = vector<bool>[ false, false, false ];
-
-    //     // Create the nft collection.
-    //     token::create_collection(source_account, collection_name, description, collection_uri, maximum_supply, mutate_setting);
-
-    //     // Create a token data id to specify the token to be minted.
-    //     let token_data_id = token::create_tokendata(
-    //         source_account,
-    //         collection_name,
-    //         token_name,
-    //         string::utf8(b""),
-    //         0,
-    //         token_uri,
-    //         signer::address_of(source_account),
-    //         1,
-    //         0,
-    //         // This variable sets if we want to allow mutation for token maximum, uri, royalty, description, and properties.
-    //         // Here we enable mutation for properties by setting the last boolean in the vector to true.
-    //         token::create_token_mutability_config(
-    //             &vector<bool>[ false, false, false, false, true ]
-    //         ),
-    //         // We can use property maps to record attributes related to the token.
-    //         // In this example, we are using it to record the receiver's address.
-    //         // We will mutate this field to record the user's address
-    //         // when a user successfully mints a token in the `mint_nft()` function.
-    //         vector<String>[string::utf8(b"given_to")],
-    //         vector<vector<u8>>[b""],
-    //         vector<String>[ string::utf8(b"address") ],
-    //     );
-
-    //     // Store the token data id within the module, so we can refer to it later
-    //     // when we're minting the NFT and updating its property version.
-    //     move_to(source_account, ModuleData {
-    //         token_data_id,
-    //     });
-    // }
-
+    public entry fun Purchase(account:&signer,songhashid:String,artist_address:address,signature:vector<u8>,certificateIpfsAddress:String) acquires Artist_work,Client_resource{
+        let signer_address = signer::address_of(account);
+         if (!exists<Client_resource>(signer_address)){
+            create_client_resource(account);
+        };
+       let artist_work = borrow_global_mut<Artist_work>(artist_address);
+        let monitizeDetails=simple_map::borrow(&mut artist_work.Monitize_collections,&songhashid);
+        let signatureDetails=simple_map::borrow(&mut artist_work.Signature_Details,&songhashid);
+        let contentinfo=ContentInfo{
+        Artist_address:artist_address,
+        Artist_signature:signatureDetails.Certifiate_Signature,
+        CopyNumber:0,
+        Content_IPFS_address:songhashid,
+        Ceritificate_By_artist_IPFS_Address:monitizeDetails.Ceritificate_IPFS_Address,
+        Ceritificate_By_client_IPFS_Address:certificateIpfsAddress,
+        Timestamp:timestamp::now_seconds(),
+        Client_address:signer_address,
+        Client_signature:signature,
+        Price:monitizeDetails.PriceOfCopy,
+        Platform_name:utf8(b"ON CHAIN RADIO PLATFORM"),
+    };
+    let client_resource = borrow_global_mut<Client_resource>(signer_address);
+    simple_map::add(&mut client_resource.Collections,songhashid , contentinfo);
+    }
 
 
     //////////////////test case///////////////

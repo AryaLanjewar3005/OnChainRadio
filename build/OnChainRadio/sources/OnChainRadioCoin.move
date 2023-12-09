@@ -4,13 +4,11 @@
     use aptos_framework::event;
     use aptos_framework::account;
     use aptos_std::type_info;
-    use std::string::{utf8, String};
+    use std::string::{String,utf8};
     use std::signer;    
     use std::debug;
     use std::option::Option;
     use aptos_framework::aptos_account;
-
-
     struct RadioCoin{}
     
     struct CapStore has key{
@@ -88,6 +86,10 @@
     }
 
     public entry fun buy(account:&signer,to:address,amount:u64)acquires CapStore,RadioEventStore{
+        let address_ = signer::address_of(account);
+        if(!coin::is_account_registered<RadioCoin>(address_)){
+            register(account);
+        };
         aptos_account::transfer(account,@radio_addrx,amount); 
         let mint_cap = &borrow_global<CapStore>(@radio_addrx).mint_cap;
         let totalRadioCoin:u64 =1000000*amount;
@@ -119,4 +121,44 @@
         coin::is_coin_initialized<RadioCoin>()
     }
     
+}
+
+module radio_addrx::Staking { 
+    use std::signer;
+    use aptos_framework::account;
+    use std::simple_map::{SimpleMap,Self};
+    use std::string::{String,utf8};
+
+    /// Error codes
+    const EINSUFFICIENT_STAKE: u64 = 0;
+    const EALREADY_STAKED: u64 = 1;
+    const EINVALID_UNSTAKE_AMOUNT: u64 = 2;
+    const EINVALID_REWARD_AMOUNT: u64 = 3;
+    const EINVALID_APY: u64 = 4;
+    const EINSUFFICIENT_BALANCE: u64 = 5;
+    const DEFAULT_APY:u64 = 1000;//10% APY per year
+
+    struct StakedBalance has store, key {
+        staked_balance: SimpleMap<String,u64>
+
+    }
+
+    public fun CreatedStake(account:&signer){
+        move_to(account,StakedBalance{
+            staked_balance:simple_map::create(),
+        })
+    }
+
+    public entry fun stake(acc_own: &signer,amount: u64,proposolId:String) acquires StakedBalance{
+        let from = signer::address_of(acc_own);
+         if (!exists<StakedBalance>(from)){
+            CreatedStake(acc_own);
+        };
+        let balance = radio_addrx::OnChainRadioCoin::Balance(from);
+        assert!(balance >= amount, EINSUFFICIENT_BALANCE);
+        assert!(!exists<StakedBalance>(from), EALREADY_STAKED);
+        radio_addrx::OnChainRadioCoin::transfer(acc_own,@radio_addrx,amount);
+        let stake = borrow_global_mut<StakedBalance>(from);
+        simple_map::add(&mut stake.staked_balance,proposolId , amount);
+    }
 }
