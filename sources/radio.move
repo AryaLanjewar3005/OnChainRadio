@@ -7,12 +7,13 @@ module radio_addrx::OnChainRadio {
     // use std::aptos_hash; 
     use std::account;
     use std::error;
-    use std::vector;
-    use 0x1::coin;
-    use 0x1::aptos_coin::AptosCoin; 
-    use 0x1::aptos_account;
+    // use std::vector;
+    // use 0x1::coin;
+    // use 0x1::aptos_coin::AptosCoin; 
+    // use 0x1::aptos_account;
     use aptos_framework::event;
-    use std::debug::print;
+    use aptos_framework::aptos_account;
+    // use std::debug::print;
     // use aptos_framework::token;
 
     // define errors
@@ -218,6 +219,7 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
        let artist_work = borrow_global_mut<Artist_work>(artist_address);
         let monitizeDetails=simple_map::borrow(&mut artist_work.Monitize_collections,&songhashid);
         let signatureDetails=simple_map::borrow(&mut artist_work.Signature_Details,&songhashid);
+
         let contentinfo=ContentInfo{
         Artist_address:artist_address,
         Artist_signature:signatureDetails.Certifiate_Signature,
@@ -231,6 +233,7 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
         Price:monitizeDetails.PriceOfCopy,
         Platform_name:utf8(b"ON CHAIN RADIO PLATFORM"),
     };
+    aptos_account::transfer(account,artist_address,monitizeDetails.PriceOfCopy);
     let client_resource = borrow_global_mut<Client_resource>(signer_address);
     simple_map::add(&mut client_resource.Collections,songhashid , contentinfo);
     }
@@ -247,22 +250,18 @@ public fun Monitize_work(account:&signer,songHashId:String, monitize:Monitize_co
 
         // create_artist_work(&artist,utf8(b"Welcome to Aptos anand by Example"));
         let name:String = utf8(b"arjit singh");
-        // let _collection_type:String = utf8(b"arjit singh");
-        // let _collection_name:String = utf8(b"arjit singh");
-        // let ipfs_hash:String = utf8(b"arjit singh");
-        // let streaming_timestamp: u64=timestamp::now_seconds();
-        create_artist_work(&artist,name);
-        let nonce = GetNonce(&artist);
-        assert!(nonce == 1, 0);
-        print(&nonce);
-        print(&name);
-        // create_collection(&artist,collection_type,collection_name,streaming_timestamp,ipfs_hash);
-        // let collection:SimpleMap<String,Collection> =GetCollectionInfo(&artist,ipfs_hash);
-        // let nonce=GetNonce(&artist);
-        // assert!(GetNonce(&artist)==6,1);
-        // debug::print(&info)
-
-        // print(artist.authentication_key)
+        let _collection_type:String = utf8(b"arjit singh");
+        let _collection_name:String = utf8(b"arjit singh");
+        let ipfs_hash:String = utf8(b"0x000138459257759252");
+        let _certififcateaddr:String = utf8(b"0x000138459257759252");
+        let streaming_timestamp: u64=timestamp::now_seconds();
+        create_collection(&artist,name,_collection_type,_collection_name,streaming_timestamp,ipfs_hash);
+        let _data: vector<u8> = b"example data";
+        // Broadcast(&artist,ipfs_hash,1000,20,50,10,certififcateaddr,data,data);
+        let _artistaddr=signer::address_of(&artist);
+        ipfs_hash = utf8(b"0x0001398459257759252");
+        // Purchase(&user1,ipfs_hash,artistaddr,data,certififcateaddr);
+        print(&ipfs_hash);
 
     }
 

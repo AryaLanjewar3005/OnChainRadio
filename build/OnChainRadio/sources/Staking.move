@@ -1,12 +1,11 @@
  module radio_addrx::OnChainRadioCoin{
-    //article: https://blocksecteam.medium.com/security-practices-in-move-development-2-aptos-coin-abe7ab7509fb
     use aptos_framework::coin;
     use aptos_framework::event;
     use aptos_framework::account;
     use aptos_std::type_info;
     use std::string::{String,utf8};
     use std::signer;    
-    use std::debug;
+    // use std::debug;
     use std::option::Option;
     use aptos_framework::aptos_account;
     struct RadioCoin{}
@@ -125,9 +124,9 @@
 
 module radio_addrx::Staking { 
     use std::signer;
-    use aptos_framework::account;
+    // use aptos_framework::account;
     use std::simple_map::{SimpleMap,Self};
-    use std::string::{String,utf8};
+    use std::string::{String};
 
     /// Error codes
     const EINSUFFICIENT_STAKE: u64 = 0;
@@ -156,7 +155,7 @@ module radio_addrx::Staking {
         };
         let balance = radio_addrx::OnChainRadioCoin::Balance(from);
         assert!(balance >= amount, EINSUFFICIENT_BALANCE);
-        assert!(!exists<StakedBalance>(from), EALREADY_STAKED);
+        // assert!(!exists<StakedBalance>(from), EALREADY_STAKED);
         radio_addrx::OnChainRadioCoin::transfer(acc_own,@radio_addrx,amount);
         let stake = borrow_global_mut<StakedBalance>(from);
         simple_map::add(&mut stake.staked_balance,proposolId , amount);
