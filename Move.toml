@@ -4,12 +4,12 @@ version = "1.0.0"
 authors = []
 
 [addresses]
-radio_addrx = '6C421AA1F9BB7C1F67E1E668169FE1660262DFB039A95EF177093D1EDF0AD726'
+radio_addrx = '0x35ce65f9f29128edba76107c5c53adc35bac4e6193451f1fed272c4326db00cc'
 [dev-addresses]
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "devnet"
+rev = "testnet"
 subdir = "aptos-move/framework/aptos-framework"
 
 [dev-dependencies]
